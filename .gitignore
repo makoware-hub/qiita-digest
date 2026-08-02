@@ -1,0 +1,32 @@
+# Python 仮想環境
+.venv/
+venv/
+
+# Python キャッシュ・ビルド成果物
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# サンプル・テストデータ
+data/
+
+# ビルド成果物
+*.zip
+
+# 認証情報・環境変数（鍵は ~/.ssh/ へ）
+.env
+.env.*
+!.env.example
+*.pem
+
+# Claude Code 個人設定（共有設定 settings.json・hooks/・skills/ はコミットする）
+.claude/settings.local.json
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

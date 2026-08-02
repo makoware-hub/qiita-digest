@@ -1,0 +1,51 @@
+# ローカル開発ツール（pytest・ruff・mypy）の管理用。
+# 構成単位ごとのランタイム依存は [dependency-groups] に <unit_name> グループとして宣言し、
+# デプロイ用 requirements.txt は uv export で生成する（手書きしない）。
+[project]
+name = "qiita-digest"
+version = "0.1.0"
+description = "Qiita の新着記事を収集し Bedrock で要約して日次ダイジェストを配信する Step Functions ジョブ群"
+# Lambda ランタイム（python3.14）に合わせる。3.13 は使わない —
+# このマシンではアプリ制御ポリシーが uv 管理 CPython 3.13 の _ssl.pyd をブロックし、
+# import ssl が失敗して boto3 / moto が動かないため。
+requires-python = ">=3.14"
+dependencies = []  # リポジトリ全体が 1 つのアプリの場合のみ、ここにランタイム依存を入れる
+
+[dependency-groups]
+dev = [
+    "mypy>=1",
+    "pytest>=8",
+    "ruff>=0.8",
+]
+# 構成単位ごとのランタイム依存はグループとして宣言する（例）。
+# デプロイ用 requirements.txt は次で生成する:
+#   uv export --only-group <unit_name> --format requirements-txt --output-file <unit_name>/requirements.txt
+# <unit_name> = [
+#     "boto3>=1.34",
+# ]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+[tool.ruff.per-file-target-version]
+# .claude/hooks/ はプロジェクトの venv ではなく「システムの python」で実行される。
+# 全体が py314 だと ruff が「括弧なし except」（PEP 758・3.14 以降の文法）へ整形してしまい、
+# 3.13 以下の環境でフックが SyntaxError になる。ここだけ保守的なバージョンに固定して、
+# lint は効かせたまま 3.14 限定の文法が混入しないようにする。
+".claude/**/*.py" = "py39"
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes, I: import 順, B: bugbear, UP: 旧記法の近代化
+select = ["E", "W", "F", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"      # 失敗・スキップの理由を実行結果の末尾にまとめて表示
+pythonpath = ["src"] # tests/<service>/ から src/<service>/ を絶対 import できるようにする
+                     # （Lambda 実行時も CodeUri=src/ なので同じ import 文がそのまま動く）
+
+[tool.mypy]
+python_version = "3.14"
+mypy_path = "src"
+check_untyped_defs = true      # 型ヒントの無い関数の中身も検査する
+ignore_missing_imports = true  # 型スタブの無いライブラリ（boto3 等）の import をエラーにしない

@@ -1,0 +1,14 @@
+# 改行コードを正規化（リポジトリ内は LF）
+* text=auto eol=lf
+
+# Windows 専用スクリプトは CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# uv.lock は自動生成物（GitHub の diff で折りたたむ）
+uv.lock linguist-generated=true
+
+# バイナリ（差分を取らない）
+*.zip binary
+*.avro binary
+*.pptx binary

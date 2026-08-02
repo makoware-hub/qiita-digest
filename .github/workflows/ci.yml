@@ -1,0 +1,50 @@
+# push のたびに Lint（ruff）とテスト（pytest）を自動実行する
+name: CI
+
+# 同一リポジトリ内ブランチの PR では push と二重実行になり得るが、チェック漏れ防止を優先する
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # .python-version の Python と uv.lock どおりの依存環境を用意する
+      # （setup-uv は v8 以降 @v8 のような移動タグを持たないため、完全なバージョンで指定する）
+      - uses: astral-sh/setup-uv@v8.3.2
+        with:
+          enable-cache: true
+
+      - name: 依存を同期（uv.lock を変更しない）
+        run: uv sync --frozen
+
+      - name: Lint（ruff）
+        run: uv run ruff check .
+
+      - name: フォーマット確認（ruff format）
+        run: uv run ruff format --check .
+
+      - name: 型チェック（mypy）
+        # Python ファイルがまだ無い雛形直後は「検査対象なし」で exit 1 になるためスキップする
+        run: |
+          if find . -path ./.venv -prune -o -path ./.claude -prune -o -name "*.py" -print | grep -q .; then
+            uv run mypy .
+          else
+            echo "Python ファイル未作成のためスキップ"
+          fi
+
+      - name: テスト（pytest）
+        # 雛形コピー直後などテストが 1 本もない場合は exit 5 になるため、それだけ許容する
+        run: |
+          set +e
+          uv run pytest
+          ec=$?
+          if [ "$ec" -eq 5 ]; then
+            echo "テスト未作成のためスキップ"
+            exit 0
+          fi
+          exit "$ec"
