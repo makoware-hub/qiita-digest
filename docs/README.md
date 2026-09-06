@@ -21,7 +21,7 @@
 
 本プロジェクトの規約・実コードにリンクする技術解説。
 
-まだ無し（ファイルを追加したらここに 1 行追記する）。
+- `claude_code_cloud_environment.md` — Claude Code クラウド環境（claude.ai/code）とローカル環境の違い・制限、ネットワークアクセスと API credentials の設定方法。
 
 ## 開発記録 `docs/notes/`
 
